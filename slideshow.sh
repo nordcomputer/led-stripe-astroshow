@@ -1,0 +1,103 @@
+#!/usr/bin/env bash
+
+SCRIPT_DIR=$(dirname "$(readlink -f "$0")")
+MOUNT_BASE="/media/$USER"
+DIRECTORY_NAME="Laufschrift"
+PID_FILE="$SCRIPT_DIR/send_comments_pid"
+
+[ -f "$PID_FILE" ] && rm "$PID_FILE"
+
+# Funktion zum Berechnen der Checksumme
+calculate_checksum() {
+  local packet=$1
+  local xorValue=0
+
+  for (( i=0; i<${#packet}; i++ )); do
+    ascii=$(printf "%d" "'${packet:$i:1}")
+    xorValue=$((xorValue ^ ascii))
+  done
+
+  # Konvertieren der XOR-Checksumme in einen zweistelligen hexadezimalen Wert
+  printf "%02X" $xorValue
+}
+
+# Funktion zum Erstellen der Nachricht
+create_message() {
+  local text=$1
+  local packet="<L1><PA><FE><MQ><WA><FE>${text}"
+  local checksum=$(calculate_checksum "$packet")
+  echo -e "<ID00>${packet}${checksum}<E><ID00><BF>06<E>"
+}
+
+show_image()
+{
+    image_path=$1
+    eog --fullscreen --single-window "$image_path" &
+}
+
+send_formated_message()
+{
+    comment_image_path=$1
+    message=$(create_message " ")
+    if [ -e '/dev/ttyUSB0' ] ; then
+      echo "$message" > /dev/ttyUSB0
+    fi
+    # Extrahieren des Kommentars aus dem Bild
+    comment=$(exiftool -b -comment "$comment_image_path") && \
+    # Konvertieren des Kommentars in ISO 8859-1 (Latin-1)
+    cleaned_comment=$(echo -n "$comment" | iconv -f UTF-8 -t iso-8859-1)
+
+    # Überprüfen, ob der Kommentar erfolgreich extrahiert und konvertiert wurde
+    if [ -z "$cleaned_comment" ]; then
+      echo "No valid comment found in the image metadata for $comment_image_path."
+      continue
+    fi
+    # Senden der Nachricht an den COM-Port
+    message=$(create_message "$cleaned_comment")
+    echo "$comment" && \
+    if [ -e '/dev/ttyUSB0' ] ; then
+      echo "$message" > /dev/ttyUSB0
+    else
+        echo "Message was not sent, because LED stripe is not connected"
+    fi
+}
+
+# Funktion zum Verarbeiten des Verzeichnisses
+process_directory() {
+  local directory_path=$1
+  while true; do
+    # Schleife über alle Bilder im Verzeichnis
+    for image_path in "$directory_path"/*.{jpg,jpeg,png}; do
+      # Überprüfen, ob die Datei existiert
+      if [ -f "$image_path" ]; then
+        show_image $image_path $new_eog_pid
+        send_formated_message "$image_path"
+        sleep 10
+      fi
+    done
+  done
+}
+
+while true; do
+  found=0
+
+  for mount_point in $(find "$MOUNT_BASE" -type d); do
+    if [ -d "$mount_point/$DIRECTORY_NAME" ]; then
+      found=1
+      if [ ! -f "$PID_FILE" ]; then
+        echo "Ordner $DIRECTORY_NAME gefunden in $mount_point. Starte das Script."
+        process_directory "$mount_point/$DIRECTORY_NAME" &&
+        echo $! > "$PID_FILE"
+      fi
+    fi
+  done
+
+  if [ $found -eq 0 ]; then
+    if [ -f "$PID_FILE" ]; then
+      PID=$(cat "$PID_FILE")
+      kill $PID
+      rm "$PID_FILE"
+      echo "Ordner $DIRECTORY_NAME nicht gefunden. Stoppe das Script."
+    fi
+  fi
+done
