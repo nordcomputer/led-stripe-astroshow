@@ -5,9 +5,29 @@ MOUNT_BASE="/media/$USER"
 DIRECTORY_NAME="Laufschrift"
 PID_FILE="$SCRIPT_DIR/send_comments_pid"
 TIME_TO_SHOW=60
-TTY_DEVICE="/dev/ttyUSB0"
+MATRIX_NAME="Silicon_Labs_CP2102_USB_to_UART_Bridge_Controller"
+declare -a TTY_DEVICES=()
 
 [ -f "$PID_FILE" ] && rm "$PID_FILE"
+
+# Funktion zum Finden der Matrix oder mehreren Matrixen
+getMatrix() {
+    for sysdevpath in $(find /sys/bus/usb/devices/usb*/ -name dev); do
+        syspath="${sysdevpath%/dev}"
+        devname="$(udevadm info -q name -p $syspath)"
+        if [[ "$devname" != "bus/"* ]]; then
+            ID_SERIAL=""
+            eval "$(udevadm info -q property --export -p $syspath)"
+            if [[ -n "$ID_SERIAL" ]]; then
+                if [[ $ID_SERIAL == *"$MATRIX_NAME"* ]]; then
+                    echo "Found ID_SERIAL: $ID_SERIAL"
+                    TTY_DEVICE=("/dev/$devname")
+                    TTY_DEVICES+=($TTY_DEVICE)
+                fi
+            fi
+          fi
+    done
+}
 
 # Funktion zum Berechnen der Checksumme
 calculate_checksum() {
@@ -28,23 +48,19 @@ create_message() {
   local text=$1
   local packet="<L1><PA><FE><MQ><WA><FE>${text}"
   local checksum=$(calculate_checksum "$packet")
-  echo -e "<ID00>${packet}${checksum}<E><ID00><BF>06<E>"
+  echo -e "<ID00>${packet}${checksum}<E><ID00><BF>01<E>
+  "
 }
 
 show_image()
 {
     image_path=$1
-    eog --fullscreen --single-window "$image_path" &
+    eog "$image_path" --fullscreen --single-window &
 }
 
 send_formated_message()
 {
     comment_image_path=$1
-    message=$(create_message " ")
-    if [ -e $TTY_DEVICE ] ; then
-      echo "$message" > $TTY_DEVICE
-    fi
-    sleep 3
     # Extrahieren des Kommentars aus dem Bild
     comment=$(exiftool -b -comment "$comment_image_path") && \
     # Konvertieren des Kommentars in ISO 8859-1 (Latin-1)
@@ -58,26 +74,31 @@ send_formated_message()
     # Senden der Nachricht an den COM-Port
     message=$(create_message "$cleaned_comment")
     echo "$comment" && \
-    if [ -e $TTY_DEVICE ] ; then
-      echo "$message" > $TTY_DEVICE
-    else
-        echo "Message was not sent, because LED matrix is not connected"
-    fi
+    for device in "${TTY_DEVICES[@]}"; do
+      if [ -e $device ] ; then
+        echo "$message" > $device
+        sleep 3
+        echo "$message" > $device
+      else
+          echo "Message was not sent, because LED matrix ($device) is not connected"
+      fi
+    done
 }
 
 # Funktion zum Verarbeiten des Verzeichnisses
 process_directory() {
   local directory_path=$1
+  getMatrix
+
+  echo "TTY_DEVICES: ${TTY_DEVICES[@]}"
   while true; do
     # Schleife über alle Bilder im Verzeichnis
     for image_path in "$directory_path"/*.{jpg,jpeg,png}; do
       # Überprüfen, ob die Datei existiert
       if [ -f "$image_path" ]; then
         send_formated_message "$image_path" && \
-        show_image $image_path $new_eog_pid
-        SUB_TIME=3
-        SLEEPTIME=$(($TIME_TO_SHOW-$SUB_TIME))
-        sleep $SLEEPTIME
+        show_image $image_path $new_eog_pid && \
+        sleep $TIME_TO_SHOW
       fi
     done
   done

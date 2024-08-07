@@ -25,22 +25,16 @@ create_message() {
   local text=$1
   local packet="<L1><PA><FE><MQ><WA><FE>${text}"
   local checksum=$(calculate_checksum "$packet")
-  echo -e "<ID00>${packet}${checksum}<E><ID00><BF>06<E>"
+  echo -e "<ID00>${packet}${checksum}<E><ID00><BF>01<E>"
 }
 
 send_formated_message()
 {
     text_to_show=$1
-    message=$(create_message " ")
-    if [ -e $TTY_DEVICE ] ; then
-      echo "$message" > $TTY_DEVICE
-    fi
-    # Extrahieren des Kommentars aus dem Bild
-
-    # Konvertieren des Kommentars in ISO 8859-1 (Latin-1)
+    # # Konvertieren des Kommentars in ISO 8859-1 (Latin-1)
     cleaned_text=$(echo -n "$text_to_show" | iconv -f UTF-8 -t iso-8859-1)
 
-    # Überprüfen, ob der Kommentar erfolgreich extrahiert und konvertiert wurde
+    # # Überprüfen, ob der Kommentar erfolgreich extrahiert und konvertiert wurde
     if [ -z "$cleaned_text" ]; then
       echo "No valid comment found in the image metadata for $text_to_show."
       continue
@@ -49,9 +43,11 @@ send_formated_message()
     message=$(create_message "$cleaned_text")
     echo "$text_to_show" && \
     if [ -e $TTY_DEVICE ] ; then
-      echo "$message" > $TTY_DEVICE
+        echo "$message" > $TTY_DEVICE
+        sleep 3
+        echo "$message" > $TTY_DEVICE
     else
-        echo "Message was not sent, because LED stripe is not connected."
+        echo "Message was not sent, because LED matrix ($device) is not connected"
     fi
 }
 
