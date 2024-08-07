@@ -55,7 +55,7 @@ create_message() {
 show_image()
 {
     image_path=$1
-    eog --fullscreen --single-window "$image_path" &
+    eog "$image_path" --fullscreen --single-window &
 }
 
 send_formated_message()
