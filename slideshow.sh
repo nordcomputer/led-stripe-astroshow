@@ -77,7 +77,7 @@ send_formated_message()
     for device in "${TTY_DEVICES[@]}"; do
       if [ -e $device ] ; then
         echo "$message" > $device
-        sleep 1
+        sleep 3
         echo "$message" > $device
       else
           echo "Message was not sent, because LED matrix ($device) is not connected"
