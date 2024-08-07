@@ -4,6 +4,8 @@ SCRIPT_DIR=$(dirname "$(readlink -f "$0")")
 MOUNT_BASE="/media/$USER"
 DIRECTORY_NAME="Laufschrift"
 PID_FILE="$SCRIPT_DIR/send_comments_pid"
+TIME_TO_SHOW=60
+TTY_DEVICE="/dev/ttyUSB0"
 
 [ -f "$PID_FILE" ] && rm "$PID_FILE"
 
@@ -39,9 +41,10 @@ send_formated_message()
 {
     comment_image_path=$1
     message=$(create_message " ")
-    if [ -e '/dev/ttyUSB0' ] ; then
-      echo "$message" > /dev/ttyUSB0
+    if [ -e $TTY_DEVICE ] ; then
+      echo "$message" > $TTY_DEVICE
     fi
+    sleep 3
     # Extrahieren des Kommentars aus dem Bild
     comment=$(exiftool -b -comment "$comment_image_path") && \
     # Konvertieren des Kommentars in ISO 8859-1 (Latin-1)
@@ -55,10 +58,10 @@ send_formated_message()
     # Senden der Nachricht an den COM-Port
     message=$(create_message "$cleaned_comment")
     echo "$comment" && \
-    if [ -e '/dev/ttyUSB0' ] ; then
-      echo "$message" > /dev/ttyUSB0
+    if [ -e $TTY_DEVICE ] ; then
+      echo "$message" > $TTY_DEVICE
     else
-        echo "Message was not sent, because LED stripe is not connected"
+        echo "Message was not sent, because LED matrix is not connected"
     fi
 }
 
@@ -70,9 +73,11 @@ process_directory() {
     for image_path in "$directory_path"/*.{jpg,jpeg,png}; do
       # Überprüfen, ob die Datei existiert
       if [ -f "$image_path" ]; then
+        send_formated_message "$image_path" && \
         show_image $image_path $new_eog_pid
-        send_formated_message "$image_path"
-        sleep 10
+        SUB_TIME=3
+        SLEEPTIME=$(($TIME_TO_SHOW-$SUB_TIME))
+        sleep $SLEEPTIME
       fi
     done
   done

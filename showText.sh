@@ -1,9 +1,8 @@
 #!/usr/bin/env bash
 
 SCRIPT_DIR=$(dirname "$(readlink -f "$0")")
-MOUNT_BASE="/media/$USER"
-DIRECTORY_NAME="Laufschrift"
-PID_FILE="$SCRIPT_DIR/send_comments_pid"
+TTY_DEVICE="/dev/ttyUSB0"
+
 
 [ -f "$PID_FILE" ] && rm "$PID_FILE"
 
@@ -33,8 +32,8 @@ send_formated_message()
 {
     text_to_show=$1
     message=$(create_message " ")
-    if [ -e '/dev/ttyUSB0' ] ; then
-      echo "$message" > /dev/ttyUSB0
+    if [ -e $TTY_DEVICE ] ; then
+      echo "$message" > $TTY_DEVICE
     fi
     # Extrahieren des Kommentars aus dem Bild
 
@@ -49,8 +48,8 @@ send_formated_message()
     # Senden der Nachricht an den COM-Port
     message=$(create_message "$cleaned_text")
     echo "$text_to_show" && \
-    if [ -e '/dev/ttyUSB0' ] ; then
-      echo "$message" > /dev/ttyUSB0
+    if [ -e $TTY_DEVICE ] ; then
+      echo "$message" > $TTY_DEVICE
     else
         echo "Message was not sent, because LED stripe is not connected."
     fi
