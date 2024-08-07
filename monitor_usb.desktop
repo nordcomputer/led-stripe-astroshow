@@ -1,0 +1,8 @@
+[Desktop Entry]
+Version=1.0
+Name=Monitor USB Drives
+Comment=Start monitoring USB drives for the Laufschrift directory
+Exec=~/LaufbandSript/monitor_usb.sh
+Icon=utilities-terminal
+Terminal=true
+Type=Application
