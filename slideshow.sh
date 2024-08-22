@@ -73,6 +73,7 @@ send_formated_message()
       entfernung="$entfernung |"
     fi
     comment="$title $entfernung $groesse"
+    comment=$(echo "$comment" | sed 's/–/-/g')
     # Konvertieren des Kommentars in ISO 8859-1 (Latin-1)
     cleaned_comment=$(echo -n "$comment" | iconv -f UTF-8 -t iso-8859-1)
 
