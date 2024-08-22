@@ -8,6 +8,11 @@ TIME_TO_SHOW=60
 MATRIX_NAME="Silicon_Labs_CP2102_USB_to_UART_Bridge_Controller"
 declare -a TTY_DEVICES=()
 
+# Überprüfen, ob ein Argument für TIME_TO_SHOW übergeben wurde
+if [ $# -ge 1 ]; then
+  TIME_TO_SHOW=$1
+fi
+
 [ -f "$PID_FILE" ] && rm "$PID_FILE"
 
 # Funktion zum Finden der Matrix oder mehreren Matrixen
