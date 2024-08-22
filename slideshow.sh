@@ -4,7 +4,7 @@ SCRIPT_DIR=$(dirname "$(readlink -f "$0")")
 MOUNT_BASE="/media/$USER"
 DIRECTORY_NAME="Laufschrift"
 PID_FILE="$SCRIPT_DIR/send_comments_pid"
-TIME_TO_SHOW=2
+TIME_TO_SHOW=60
 MATRIX_NAME="Silicon_Labs_CP2102_USB_to_UART_Bridge_Controller"
 declare -a TTY_DEVICES=()
 
