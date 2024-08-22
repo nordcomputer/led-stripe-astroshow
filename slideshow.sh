@@ -4,7 +4,7 @@ SCRIPT_DIR=$(dirname "$(readlink -f "$0")")
 MOUNT_BASE="/media/$USER"
 DIRECTORY_NAME="Laufschrift"
 PID_FILE="$SCRIPT_DIR/send_comments_pid"
-TIME_TO_SHOW=60
+TIME_TO_SHOW=5
 MATRIX_NAME="Silicon_Labs_CP2102_USB_to_UART_Bridge_Controller"
 declare -a TTY_DEVICES=()
 
@@ -62,7 +62,17 @@ send_formated_message()
 {
     comment_image_path=$1
     # Extrahieren des Kommentars aus dem Bild
-    comment=$(exiftool -b -comment "$comment_image_path") && \
+    # Extrahieren des Kommentars aus dem Bild
+    title=$(exiftool -b -title "$comment_image_path")
+    entfernung=$(exiftool -b -description "$comment_image_path")
+    groesse=$(exiftool -b -subject "$comment_image_path")
+    if [ "$title" != "" ]; then
+      title="$title |"
+    fi
+    if [ "$entfernung" != "" ] && [ "$groesse" != "" ]; then
+      entfernung="$entfernung |"
+    fi
+    comment="$title $entfernung $groesse"
     # Konvertieren des Kommentars in ISO 8859-1 (Latin-1)
     cleaned_comment=$(echo -n "$comment" | iconv -f UTF-8 -t iso-8859-1)
 
