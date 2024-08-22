@@ -26,7 +26,7 @@ if [ ! -d "$BILDER_ORDNER" ]; then
 fi
 
 # CSV-Datei Zeile für Zeile einlesen
-while IFS=';' read -r DATEINAME NAME ENTFERNUNG GROESSE; do
+while IFS=';' read -r DATEINAME NAME ENTFERNUNG GROESSE CREATOR; do
     # Überspringen der Header-Zeile
     if [ "$DATEINAME" == "Dateiname" ]; then
         continue
@@ -48,7 +48,8 @@ while IFS=';' read -r DATEINAME NAME ENTFERNUNG GROESSE; do
         GROESSE=$(echo "$GROESSE" | sed 's/–/-/g')
         ENTFERNUNG=$(echo "$ENTFERNUNG" | sed 's/–/-/g')
         # Metadaten mit ExifTool schreiben
-        exiftool -overwrite_original -XMP-dc:Title="$NAME" -XMP-dc:Description="$ENTFERNUNG" -XMP-dc:Subject="$GROESSE" "$DATEIPFAD"
+        exiftool -overwrite_original -XMP-dc:Title="$NAME" -XMP-dc:Description="$ENTFERNUNG" -XMP-dc:Subject="$GROESSE" -XMP-dc:Creator="$CREATOR" "$DATEIPFAD"
+
     else
         echo "Datei $DATEIPFAD existiert nicht, übersprungen."
     fi

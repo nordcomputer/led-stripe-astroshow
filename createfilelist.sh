@@ -17,7 +17,7 @@ AUSGABEDATEI="$2"
 > "$AUSGABEDATEI"
 
 # CSV-Header schreiben
-echo "Dateiname;Name;Entfernung;Größe" >> "$AUSGABEDATEI"
+echo "Dateiname;Name;Entfernung;Größe;Creator" >> "$AUSGABEDATEI"
 
 # Alle PNG- und JPG-Dateien einlesen und die Dateinamen in die CSV-Datei schreiben
 for DATEI in "$ORDNERPFAD"/*.{png,jpg,jpeg}; do
