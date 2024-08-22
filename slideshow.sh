@@ -102,8 +102,8 @@ process_directory() {
 
   echo "TTY_DEVICES: ${TTY_DEVICES[@]}"
   while true; do
-    # Schleife über alle Bilder im Verzeichnis
-    for image_path in "$directory_path"/*.{jpg,jpeg,png}; do
+    # Schleife über alle Bilder im Verzeichnis und dessen Unterverzeichnissen
+    find "$directory_path" -type f \( -iname '*.jpg' -o -iname '*.jpeg' -o -iname '*.png' \) | while read -r image_path; do
       # Überprüfen, ob die Datei existiert
       if [ -f "$image_path" ]; then
         send_formated_message "$image_path" && \
