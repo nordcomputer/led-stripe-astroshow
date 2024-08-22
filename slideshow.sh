@@ -4,7 +4,7 @@ SCRIPT_DIR=$(dirname "$(readlink -f "$0")")
 MOUNT_BASE="/media/$USER"
 DIRECTORY_NAME="Laufschrift"
 PID_FILE="$SCRIPT_DIR/send_comments_pid"
-TIME_TO_SHOW=5
+TIME_TO_SHOW=2
 MATRIX_NAME="Silicon_Labs_CP2102_USB_to_UART_Bridge_Controller"
 declare -a TTY_DEVICES=()
 
@@ -98,17 +98,17 @@ send_formated_message()
 
 # Funktion zum Verarbeiten des Verzeichnisses
 process_directory() {
-  local directory_path=$1
+  local directory_path="$1"
   getMatrix
 
   echo "TTY_DEVICES: ${TTY_DEVICES[@]}"
   while true; do
     # Schleife über alle Bilder im Verzeichnis und dessen Unterverzeichnissen
-    find "$directory_path" -type f \( -iname '*.jpg' -o -iname '*.jpeg' -o -iname '*.png' \) | while read -r image_path; do
+    find "$directory_path" -type f \( -iname '*.jpg' -o -iname '*.jpeg' -o -iname '*.png' \) | while IFS= read -r image_path; do
       # Überprüfen, ob die Datei existiert
       if [ -f "$image_path" ]; then
         send_formated_message "$image_path" && \
-        show_image $image_path $new_eog_pid && \
+        show_image "$image_path" "$new_eog_pid" && \
         sleep $TIME_TO_SHOW
       fi
     done
