@@ -19,8 +19,8 @@ AUSGABEDATEI="$2"
 # CSV-Header schreiben
 echo "Dateiname;Name;Entfernung;Größe;Creator" >> "$AUSGABEDATEI"
 
-# Alle PNG- und JPG-Dateien einlesen und die Dateinamen in die CSV-Datei schreiben
-for DATEI in "$ORDNERPFAD"/*.{png,jpg,jpeg}; do
+# Alle PNG- GIF- und JPG-Dateien einlesen und die Dateinamen in die CSV-Datei schreiben
+for DATEI in "$ORDNERPFAD"/*.{png,jpg,jpeg,gif}; do
     # Prüfen, ob die Datei existiert (falls keine Dateien gefunden wurden, um Fehlermeldungen zu vermeiden)
     if [ -e "$DATEI" ]; then
         DATEINAME=$(basename "$DATEI")

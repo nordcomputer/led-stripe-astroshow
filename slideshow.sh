@@ -109,7 +109,7 @@ process_directory() {
   echo "TTY_DEVICES: ${TTY_DEVICES[@]}"
   while true; do
     # Schleife über alle Bilder im Verzeichnis und dessen Unterverzeichnissen, in zufälliger Reihenfolge
-    find "$directory_path" -type f \( -iname '*.jpg' -o -iname '*.jpeg' -o -iname '*.png' \) | sort -R | while IFS= read -r image_path; do
+    find "$directory_path" -type f \( -iname '*.jpg' -o -iname '*.jpeg' -o -iname '*.png' -o -iname '*.gif' \) | sort -R | while IFS= read -r image_path; do
       # Überprüfen, ob die Datei existiert
       if [ -f "$image_path" ]; then
         send_formated_message "$image_path" && \

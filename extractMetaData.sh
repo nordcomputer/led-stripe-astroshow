@@ -19,8 +19,8 @@ extract_metadata() {
     local image_path="$1"
     local relative_path="${image_path#$SOURCE_DIR/}"
     local title=$(exiftool -b -title "$image_path")
-    local description=$(exiftool -b -description "$image_path")
-    local subject=$(exiftool -b -subject "$image_path")
+    local description=$(exiftool -b -description "$image_path" | sed 's/Entfernung: //g')
+    local subject=$(exiftool -b -subject "$image_path" | sed 's/Größe: //g')
     local creator=$(exiftool -b -creator "$image_path")
 
     # Die Metadaten in eine CSV-Zeile schreiben, getrennt durch Semikolons
@@ -28,7 +28,7 @@ extract_metadata() {
 }
 
 # Rekursiv durch alle Bilder im Verzeichnis gehen
-find "$SOURCE_DIR" -type f \( -iname '*.jpg' -o -iname '*.jpeg' -o -iname '*.png' \) | while IFS= read -r image_path; do
+find "$SOURCE_DIR" -type f \( -iname '*.jpg' -o -iname '*.jpeg' -o -iname '*.png' -o -iname '*.gif' \) | while IFS= read -r image_path; do
     # Metadaten aus jedem Bild auslesen
     extract_metadata "$image_path"
 done
