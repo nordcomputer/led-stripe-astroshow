@@ -44,6 +44,9 @@ while IFS=';' read -r DATEINAME NAME ENTFERNUNG GROESSE; do
         if [ "$GROESSE" != "" ]; then
             GROESSE="Größe: $GROESSE"
         fi
+        NAME=$(echo "$NAME" | sed 's/–/-/g')
+        GROESSE=$(echo "$GROESSE" | sed 's/–/-/g')
+        ENTFERNUNG=$(echo "$ENTFERNUNG" | sed 's/–/-/g')
         # Metadaten mit ExifTool schreiben
         exiftool -overwrite_original -XMP-dc:Title="$NAME" -XMP-dc:Description="$ENTFERNUNG" -XMP-dc:Subject="$GROESSE" "$DATEIPFAD"
     else
