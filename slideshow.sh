@@ -8,6 +8,11 @@ TIME_TO_SHOW=60
 MATRIX_NAME="Silicon_Labs_CP2102_USB_to_UART_Bridge_Controller"
 declare -a TTY_DEVICES=()
 
+# Überprüfen, ob ein Argument für TIME_TO_SHOW übergeben wurde
+if [ $# -ge 1 ]; then
+  TIME_TO_SHOW=$1
+fi
+
 [ -f "$PID_FILE" ] && rm "$PID_FILE"
 
 # Funktion zum Finden der Matrix oder mehreren Matrixen
@@ -62,7 +67,18 @@ send_formated_message()
 {
     comment_image_path=$1
     # Extrahieren des Kommentars aus dem Bild
-    comment=$(exiftool -b -comment "$comment_image_path") && \
+    # Extrahieren des Kommentars aus dem Bild
+    title=$(exiftool -b -title "$comment_image_path")
+    entfernung=$(exiftool -b -description "$comment_image_path")
+    groesse=$(exiftool -b -subject "$comment_image_path")
+    if [ "$title" != "" ]; then
+      title="$title |"
+    fi
+    if [ "$entfernung" != "" ] && [ "$groesse" != "" ]; then
+      entfernung="$entfernung |"
+    fi
+    comment="$title $entfernung $groesse"
+    comment=$(echo "$comment" | sed 's/–/-/g')
     # Konvertieren des Kommentars in ISO 8859-1 (Latin-1)
     cleaned_comment=$(echo -n "$comment" | iconv -f UTF-8 -t iso-8859-1)
 
@@ -87,17 +103,17 @@ send_formated_message()
 
 # Funktion zum Verarbeiten des Verzeichnisses
 process_directory() {
-  local directory_path=$1
+  local directory_path="$1"
   getMatrix
 
   echo "TTY_DEVICES: ${TTY_DEVICES[@]}"
   while true; do
-    # Schleife über alle Bilder im Verzeichnis
-    for image_path in "$directory_path"/*.{jpg,jpeg,png}; do
+    # Schleife über alle Bilder im Verzeichnis und dessen Unterverzeichnissen, in zufälliger Reihenfolge
+    find "$directory_path" -type f \( -iname '*.jpg' -o -iname '*.jpeg' -o -iname '*.png' -o -iname '*.gif' \) | sort -R | while IFS= read -r image_path; do
       # Überprüfen, ob die Datei existiert
       if [ -f "$image_path" ]; then
         send_formated_message "$image_path" && \
-        show_image $image_path $new_eog_pid && \
+        show_image "$image_path" "$new_eog_pid" && \
         sleep $TIME_TO_SHOW
       fi
     done
